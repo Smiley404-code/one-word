@@ -596,11 +596,11 @@ function frame(){
     });
 
     // --- camera ---
-    var cx = P.x, cz = P.z + 11, cy = 15.5;
+    var cx = P.x, cz = P.z + 8.5, cy = 6.5;
     camera.position.x += (cx - camera.position.x) * Math.min(1, 6*dt);
     camera.position.y += (cy - camera.position.y) * Math.min(1, 6*dt);
     camera.position.z += (cz - camera.position.z) * Math.min(1, 6*dt);
-    camera.lookAt(P.x, 1.2, P.z - 2);
+    camera.lookAt(P.x, 1.8, P.z - 4);
 
     // --- day/night ---
     var elev = Math.sin(dayT * Math.PI * 2);
@@ -646,7 +646,7 @@ document.getElementById('againBtn').addEventListener('click', function(){
 // debug/verification hook (harmless)
 window.oneword = { P: P, wolves: wolves, player: player, slash: slash, scene: scene, setDayT: function(t){ dayT = t; }, getDayT: function(){ return dayT; }, start: function(){ document.getElementById('playBtn').click(); } };
 
-camera.position.set(0, 15.5, 11);
+camera.position.set(0, 6.5, 8.5);
 drawHearts();
 frame();
 })();
