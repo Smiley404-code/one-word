@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>One Word v0.1</title>
+<title>One Word v0.2</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { width:100%; height:100%; overflow:hidden; background:#0e1530; touch-action:none;
@@ -71,7 +71,7 @@
 
 <div class="overlay" id="start">
   <h1>ONE WORD</h1>
-  <div class="ver">v0.1</div>
+  <div class="ver">v0.2</div>
   <div class="tag">🌲 Explore the green meadow<br>⚔️ Fight the wolves<br>🦌 Deer and birds keep you company<br>🌙 Watch day turn into night</div>
   <button class="playbtn" id="playBtn">▶ PLAY</button>
   <div class="keys">📱 Joystick to run &bull; ⚔️ button to attack<br>💻 WASD / arrows to run &bull; Space to attack</div>
@@ -82,7 +82,7 @@
   <h1>THE WOLVES GOT YOU!</h1>
   <div id="overScore"></div>
   <button class="playbtn" id="againBtn">↻ PLAY AGAIN</button>
-  <div class="foot">One Word v0.1 &bull; Made by Smiley 💚</div>
+  <div class="foot">One Word v0.2 &bull; Made by Smiley 💚</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
@@ -400,7 +400,27 @@ function joyEnd(e){ if(e.pointerId === joyId){ joyId = null; joyVec.x = 0; joyVe
 joyEl.addEventListener('pointerup', joyEnd); joyEl.addEventListener('pointercancel', joyEnd);
 
 document.getElementById('atk').addEventListener('pointerdown', function(e){ e.preventDefault(); tryAttack(); });
-canvas.addEventListener('pointerdown', function(e){ if(e.pointerType === 'mouse') tryAttack(); });
+var cameraYaw = 0, lookPointerId = null, lookLastX = 0, lookDragged = false;
+canvas.addEventListener('pointerdown', function(e){
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  lookPointerId = e.pointerId; lookLastX = e.clientX; lookDragged = false;
+  try { canvas.setPointerCapture(lookPointerId); } catch(_) {}
+  e.preventDefault();
+});
+canvas.addEventListener('pointermove', function(e){
+  if(e.pointerId !== lookPointerId) return;
+  var dx = e.clientX - lookLastX; lookLastX = e.clientX;
+  if(Math.abs(dx) > 0) lookDragged = true;
+  cameraYaw -= dx * 0.006;
+  e.preventDefault();
+});
+function lookEnd(e){
+  if(e.pointerId !== lookPointerId) return;
+  if(e.pointerType === 'mouse' && !lookDragged) tryAttack();
+  lookPointerId = null;
+}
+canvas.addEventListener('pointerup', lookEnd);
+canvas.addEventListener('pointercancel', lookEnd);
 
 if(('ontouchstart' in window) || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
 
@@ -596,11 +616,13 @@ function frame(){
     });
 
     // --- camera ---
-    var cx = P.x, cz = P.z + 8.5, cy = 6.5;
+    var cx = P.x + Math.sin(cameraYaw) * 8.5;
+    var cz = P.z + Math.cos(cameraYaw) * 8.5;
+    var cy = 6.5;
     camera.position.x += (cx - camera.position.x) * Math.min(1, 6*dt);
     camera.position.y += (cy - camera.position.y) * Math.min(1, 6*dt);
     camera.position.z += (cz - camera.position.z) * Math.min(1, 6*dt);
-    camera.lookAt(P.x, 1.8, P.z - 4);
+    camera.lookAt(P.x - Math.sin(cameraYaw) * 4, 1.8, P.z - Math.cos(cameraYaw) * 4);
 
     // --- day/night ---
     var elev = Math.sin(dayT * Math.PI * 2);
@@ -644,7 +666,7 @@ document.getElementById('againBtn').addEventListener('click', function(){
 });
 
 // debug/verification hook (harmless)
-window.oneword = { P: P, wolves: wolves, player: player, slash: slash, scene: scene, setDayT: function(t){ dayT = t; }, getDayT: function(){ return dayT; }, start: function(){ document.getElementById('playBtn').click(); } };
+window.oneword = { P: P, wolves: wolves, player: player, slash: slash, scene: scene, setDayT: function(t){ dayT = t; }, getDayT: function(){ return dayT; }, getCameraYaw: function(){ return cameraYaw; }, start: function(){ document.getElementById('playBtn').click(); } };
 
 camera.position.set(0, 6.5, 8.5);
 drawHearts();
@@ -653,3 +675,4 @@ frame();
 </script>
 </body>
 </html>
+
